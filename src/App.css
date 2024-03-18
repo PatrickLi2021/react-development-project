@@ -1,9 +1,29 @@
 /* Add styling for your page here */
 
-.App {
+.App {}
 
+.player-card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 2%;
 }
 
-.BakeryItem {
-  
+.player-card {
+    width: 108%;
+    height: auto;
+    margin: 2%;
+    display: flex;
+}
+
+.instructions-container {
+    margin: 2%;
+}
+
+.position-filter {
+    margin: 2%;
+}
+
+.squad-container {
+    margin: 2%;
 }
