@@ -14,17 +14,48 @@ function App() {
   const [cartItems, setCartItems] = useState([]);
   const [selectedPosition, setSelectedPosition] = useState("");
   const [playersBought, setPlayersBought] = useState([]);
-  const [addedPlayer, setAddedPlayer] = useState("");
-
-  const filteredData = bakeryData.filter(
-    (item) =>
-      item.position.toUpperCase() === selectedPosition.toUpperCase() &&
-      !playersBought.includes(item.name)
-  );
+  const [filteredData, setFilteredData] = useState(bakeryData);
+  const [sortState, setSortState] = useState("none");
 
   const handlePositionChange = (position) => {
     setSelectedPosition(position);
-    console.log(selectedPosition);
+    if (position === "All") {
+      setFilteredData(
+        bakeryData.filter((item) => !playersBought.includes(item.name))
+      );
+    } else {
+      setFilteredData(
+        bakeryData.filter(
+          (item) =>
+            item.position.toUpperCase() === position.toUpperCase() &&
+            !playersBought.includes(item.name)
+        )
+      );
+    }
+  };
+
+  const handleSort = (sortValue) => {
+    setSortState(sortValue);
+    console.log(sortValue);
+    if (sortValue === "ASC") {
+      setFilteredData(
+        filteredData.sort(
+          (a, b) => convertPriceToNum(a.price) - convertPriceToNum(b.price)
+        )
+      );
+    } else if (sortValue === "DESC") {
+      setFilteredData(
+        filteredData.sort(
+          (a, b) => convertPriceToNum(b.price) - convertPriceToNum(a.price)
+        )
+      );
+    }
+  };
+
+  const convertPriceToNum = (price) => {
+    const numericStr = price.replace(/[^0-9]/g, "");
+    const intValue = parseInt(numericStr, 10) * 10000;
+    return intValue;
   };
 
   const addItem = (price, name) => {
@@ -40,6 +71,25 @@ function App() {
     const formattedTotalPrice = newTotalPrice.toLocaleString();
     playersBought.push(name);
     setPlayersBought(playersBought);
+    console.log(selectedPosition);
+    console.log("hi");
+    if (selectedPosition === "All" || selectedPosition === "") {
+      setFilteredData(
+        bakeryData.filter(
+          (item) =>
+            !playersBought.includes(item.name) &&
+            item.position.toUpperCase() !== selectedPosition.toUpperCase()
+        )
+      );
+    } else {
+      setFilteredData(
+        bakeryData.filter(
+          (item) =>
+            item.position.toUpperCase() === selectedPosition.toUpperCase() &&
+            !playersBought.includes(item.name)
+        )
+      );
+    }
     setTotalPrice(formattedTotalPrice);
     cartItems.push(name);
   };
@@ -67,6 +117,7 @@ function App() {
             value={selectedPosition || ""}
             onChange={(e) => handlePositionChange(e.target.value)}
           >
+            <option value="All">All</option>
             <option value="ST">ST</option>
             <option value="CAM">CAM</option>
             <option value="CM">CM</option>
@@ -77,12 +128,23 @@ function App() {
             <option value="GK">GK</option>
           </select>
         </label>
+        <label>
+          <p>Sort By:</p>
+          <select
+            value={selectedPosition || ""}
+            onChange={(e) => handleSort(e.target.value)}
+          >
+            <option value="None">None</option>
+            <option value="ASC">Price Ascending</option>
+            <option value="DESC">Price Descending</option>
+          </select>
+        </label>
       </div>
       <div class="player-card-container">
         {filteredData.map((item, index) => (
           <div class="player-card">
             <BakeryItem
-              clickHandler={() => addItem(item.price, item.name)}
+              clickHandler={() => addItem(item.price, item.name, item.position)}
               item={item}
               index={index}
               image={item.image}
@@ -94,7 +156,7 @@ function App() {
         <h2>My Squad</h2>
         <div>
           <p>
-            <b>Total Price:</b> {totalPrice}
+            <b>Total Price (in €): </b> {totalPrice}
             <div>
               {cartItems.map((item) => (
                 <li>{item}</li>

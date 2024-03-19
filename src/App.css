@@ -21,7 +21,9 @@
 }
 
 .position-filter {
-    margin: 2%;
+    margin-left: 2%;
+    display: flex;
+    flex-direction: row;
 }
 
 .squad-container {
