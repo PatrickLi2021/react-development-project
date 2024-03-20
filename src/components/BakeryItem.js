@@ -1,7 +1,7 @@
 import "./bakeryItem.css";
 
 export default function BakeryItem(props) {
-  const { item, index, clickHandler, image } = props;
+  const { item, inCart, clickHandler } = props;
   return (
     <div class="player-container">
       <div class="player-info-container">
@@ -20,7 +20,12 @@ export default function BakeryItem(props) {
           <b>{item.price}</b>
         </p>
       </div>
-      <button onClick={clickHandler}>Add</button>
+      {/* <button onClick={clickHandler}>Add</button> */}
+      {inCart ? (
+        <button onClick={clickHandler}>Remove</button>
+      ) : (
+        <button onClick={clickHandler}>Add</button>
+      )}
     </div>
   );
 }

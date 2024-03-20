@@ -10,8 +10,9 @@ bakeryData.forEach((item) => {
 /* ############################################################## */
 
 function App() {
-  const [totalPrice, setTotalPrice] = useState("");
+  const [totalPrice, setTotalPrice] = useState("0");
   const [cartItems, setCartItems] = useState([]);
+  const [originalItems, setOriginalItems] = useState(bakeryData);
   const [selectedPosition, setSelectedPosition] = useState("");
   const [playersBought, setPlayersBought] = useState([]);
   const [filteredData, setFilteredData] = useState(bakeryData);
@@ -21,11 +22,11 @@ function App() {
     setSelectedPosition(position);
     if (position === "All") {
       setFilteredData(
-        bakeryData.filter((item) => !playersBought.includes(item.name))
+        filteredData.filter((item) => !playersBought.includes(item.name))
       );
     } else {
       setFilteredData(
-        bakeryData.filter(
+        filteredData.filter(
           (item) =>
             item.position.toUpperCase() === position.toUpperCase() &&
             !playersBought.includes(item.name)
@@ -34,21 +35,31 @@ function App() {
     }
   };
 
+  const handleReset = () => {
+    setFilteredData(originalItems);
+    setSelectedPosition("All");
+    setSortState("None");
+  };
+
   const handleSort = (sortValue) => {
-    setSortState(sortValue);
     console.log(sortValue);
     if (sortValue === "ASC") {
+      setSortState(sortValue);
       setFilteredData(
-        filteredData.sort(
+        filteredData.toSorted(
           (a, b) => convertPriceToNum(a.price) - convertPriceToNum(b.price)
         )
       );
     } else if (sortValue === "DESC") {
+      setSortState(sortValue);
       setFilteredData(
-        filteredData.sort(
+        filteredData.toSorted(
           (a, b) => convertPriceToNum(b.price) - convertPriceToNum(a.price)
         )
       );
+    } else if (sortValue === "None") {
+      setSortState("None");
+      setFilteredData(originalItems);
     }
   };
 
@@ -58,7 +69,36 @@ function App() {
     return intValue;
   };
 
-  const addItem = (price, name) => {
+  const removeItem = (item, price, name) => {
+    const numericStr = price.replace(/[^0-9]/g, "");
+    const intValue = parseInt(numericStr, 10) * 10000;
+    let totalPriceNum;
+    if (totalPrice === "") {
+      totalPriceNum = 0;
+    } else {
+      totalPriceNum = parseInt(totalPrice.replace(/,/g, ""), 10);
+    }
+    const newTotalPrice = totalPriceNum - intValue;
+    const formattedTotalPrice = newTotalPrice.toLocaleString();
+    setTotalPrice(formattedTotalPrice);
+    // setPlayersRemoved(playersRemoved.push(item));
+    let index = playersBought.indexOf(item);
+    if (index !== -1) {
+      playersBought.splice(index, 1);
+    }
+    setPlayersBought(playersBought);
+    console.log(playersBought);
+    setFilteredData(
+      bakeryData.filter(
+        (item) =>
+          !playersBought.includes(item) &&
+          item.position.toUpperCase() !== selectedPosition.toUpperCase()
+      )
+    );
+    console.log(bakeryData);
+  };
+
+  const addItem = (item, price, name) => {
     const numericStr = price.replace(/[^0-9]/g, "");
     const intValue = parseInt(numericStr, 10) * 10000;
     let totalPriceNum;
@@ -69,15 +109,14 @@ function App() {
     }
     const newTotalPrice = totalPriceNum + intValue;
     const formattedTotalPrice = newTotalPrice.toLocaleString();
-    playersBought.push(name);
+    setTotalPrice(formattedTotalPrice);
+    playersBought.push(item);
     setPlayersBought(playersBought);
-    console.log(selectedPosition);
-    console.log("hi");
     if (selectedPosition === "All" || selectedPosition === "") {
       setFilteredData(
         bakeryData.filter(
           (item) =>
-            !playersBought.includes(item.name) &&
+            !playersBought.includes(item) &&
             item.position.toUpperCase() !== selectedPosition.toUpperCase()
         )
       );
@@ -86,11 +125,10 @@ function App() {
         bakeryData.filter(
           (item) =>
             item.position.toUpperCase() === selectedPosition.toUpperCase() &&
-            !playersBought.includes(item.name)
+            !playersBought.includes(item)
         )
       );
     }
-    setTotalPrice(formattedTotalPrice);
     cartItems.push(name);
   };
 
@@ -104,50 +142,101 @@ function App() {
         </h2>
         <h3>
           Each player card has a picture of the player, along with his position,
-          club, and nationality. The price of the player is also listed in each
-          card in euros.
+          club (shown by the badge), and nationality (shown by the flag). The
+          price of the player (in euros) is also listed in each card.
         </h3>
-        <br />
+        <p>
+          <b>How to Use: </b>On this page, we have a list of soccer players that
+          you can choose from to build (aggregate) your team. Each player has a
+          particular cost (market value) associated with them that corresponds
+          to how much a team would have to pay to buy them in real life. You can
+          choose to buy different players to add to your team and the total
+          cost/value of your team will be shown below, along with the players
+          that you buy. You can choose to filter by position and sort the
+          available players by how much their market value is.
+        </p>
+        <p>Here is a guide to what the position abbreviations correspond to:</p>
+        <ul>
+          <li>
+            <b>ST = </b> Striker
+          </li>
+          <li>
+            <b>LW = </b> Left Winger
+          </li>
+          <li>
+            <b>RW = </b> Right Winger
+          </li>
+          <li>
+            <b>CAM = </b>Central Attacking Midfielder
+          </li>
+          <li>
+            <b>CM = </b>Central Midfielder
+          </li>
+          <li>
+            <b>CDM = </b> Central Defensive Midfielder
+          </li>
+          <li>
+            <b>LB = </b> Left Back
+          </li>
+          <li>
+            <b>CB = </b> Center Back
+          </li>
+          <li>
+            <b>RB = </b> Right Back
+          </li>
+          <li>
+            <b>GK = </b> Goalkeeper
+          </li>
+        </ul>
+
         <h3>Players Available in the Market</h3>
       </div>
-      <div class="position-filter">
-        <label>
-          <p>Filter by Position:</p>
-          <select
-            value={selectedPosition || ""}
-            onChange={(e) => handlePositionChange(e.target.value)}
-          >
-            <option value="All">All</option>
-            <option value="ST">ST</option>
-            <option value="CAM">CAM</option>
-            <option value="CM">CM</option>
-            <option value="CDM">CDM</option>
-            <option value="LB">LB</option>
-            <option value="CB">CB</option>
-            <option value="RB">RB</option>
-            <option value="GK">GK</option>
-          </select>
-        </label>
-        <label>
-          <p>Sort By:</p>
-          <select
-            value={selectedPosition || ""}
-            onChange={(e) => handleSort(e.target.value)}
-          >
-            <option value="None">None</option>
-            <option value="ASC">Price Ascending</option>
-            <option value="DESC">Price Descending</option>
-          </select>
-        </label>
+      <div class="filter-sort-reset-container">
+        <div class="filter-container">
+          <label>
+            <p>Filter by Position:</p>
+            <select
+              value={selectedPosition || ""}
+              onChange={(e) => handlePositionChange(e.target.value)}
+            >
+              <option value="All">All</option>
+              <option value="ST">ST</option>
+              <option value="CAM">CAM</option>
+              <option value="CM">CM</option>
+              <option value="CDM">CDM</option>
+              <option value="LB">LB</option>
+              <option value="CB">CB</option>
+              <option value="RB">RB</option>
+              <option value="GK">GK</option>
+            </select>
+          </label>
+        </div>
+        <div class="sort-container">
+          <label>
+            <p>Sort By:</p>
+            <select
+              value={sortState || ""}
+              onChange={(e) => handleSort(e.target.value)}
+            >
+              <option value="None">None</option>
+              <option value="ASC">Price Ascending</option>
+              <option value="DESC">Price Descending</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <button onClick={() => handleReset()}>Reset</button>
+        </div>
       </div>
       <div class="player-card-container">
         {filteredData.map((item, index) => (
           <div class="player-card">
             <BakeryItem
-              clickHandler={() => addItem(item.price, item.name, item.position)}
+              clickHandler={() => addItem(item, item.price, item.name)}
               item={item}
               index={index}
               image={item.image}
+              inCart={playersBought.includes(item)}
             />
           </div>
         ))}
@@ -157,9 +246,17 @@ function App() {
         <div>
           <p>
             <b>Total Price (in €): </b> {totalPrice}
-            <div>
-              {cartItems.map((item) => (
-                <li>{item}</li>
+            <div class="cart-aggregator-container">
+              {playersBought.map((item, index) => (
+                <div class="player-card">
+                  <BakeryItem
+                    clickHandler={() => removeItem(item, item.price, item.name)}
+                    item={item}
+                    index={index}
+                    image={item.image}
+                    inCart={playersBought.includes(item)}
+                  />
+                </div>
               ))}
             </div>
           </p>
